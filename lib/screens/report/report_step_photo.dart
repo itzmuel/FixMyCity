@@ -1,0 +1,131 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../models/report_draft.dart';
+import '../../widgets/step_dots.dart';
+import '../../app/theme.dart';
+
+class ReportStepPhoto extends StatefulWidget {
+  final ReportDraft draft;
+  final VoidCallback onNext;
+  final VoidCallback onBack;
+
+  const ReportStepPhoto({
+    super.key,
+    required this.draft,
+    required this.onNext,
+    required this.onBack,
+  });
+
+  @override
+  State<ReportStepPhoto> createState() => _ReportStepPhotoState();
+}
+
+class _ReportStepPhotoState extends State<ReportStepPhoto> {
+  final _picker = ImagePicker();
+  bool _picking = false;
+
+  Future<void> _pick(ImageSource source) async {
+    setState(() => _picking = true);
+    try {
+      final xfile = await _picker.pickImage(source: source, imageQuality: 80);
+      if (xfile == null) return;
+
+      setState(() {
+        widget.draft.photoPath = xfile.path;
+      });
+    } catch (_) {
+      _toast('Could not pick image.');
+    } finally {
+      setState(() => _picking = false);
+    }
+  }
+
+  void _toast(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final path = widget.draft.photoPath;
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        const StepDots(current: 4, total: 4),
+        const SizedBox(height: 16),
+        const Text('Add a photo',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+        const SizedBox(height: 6),
+        const Text('Photos help city staff verify and resolve issues faster.',
+            style: TextStyle(color: AppColors.muted)),
+        const SizedBox(height: 12),
+
+        Container(
+          height: 200,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border.all(color: AppColors.border),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: path == null
+              ? const Center(
+                  child: Text('No photo selected', style: TextStyle(color: AppColors.muted)),
+                )
+              : ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: Image.file(File(path), fit: BoxFit.cover),
+                ),
+        ),
+
+        const SizedBox(height: 12),
+
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: _picking ? null : () => _pick(ImageSource.camera),
+                child: const Text('Take Photo'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: OutlinedButton(
+                onPressed: _picking ? null : () => _pick(ImageSource.gallery),
+                child: const Text('Upload'),
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 10),
+
+        const Text(
+          'Tip: Avoid faces and license plates if possible. Do not report emergencies.',
+          style: TextStyle(color: AppColors.muted, fontSize: 12),
+        ),
+
+        const SizedBox(height: 16),
+
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: widget.onBack,
+                child: const Text('Back'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: FilledButton(
+                onPressed: widget.draft.isStep4Valid ? widget.onNext : null,
+                child: const Text('Review'),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
