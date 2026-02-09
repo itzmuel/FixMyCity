@@ -102,7 +102,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                           width: 72,
                           height: 72,
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 26), // 10%
+                            color: AppColors.primary.withValues(alpha: 0.10), // 10%
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -249,7 +249,7 @@ class _StatusChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: bg.withValues(alpha: 153)), // 60%
+        border: Border.all(color: bg.withValues(alpha: 0.6)), // 60%
       ),
       child: Text(
         label,

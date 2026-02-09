@@ -14,15 +14,31 @@ class HelpRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(icon, size: 18, color: AppColors.muted),
-          const SizedBox(width: 10),
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: AppColors.muted.withValues(alpha: 0.10), // ~10% tint
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              size: 18,
+              color: AppColors.muted,
+            ),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],

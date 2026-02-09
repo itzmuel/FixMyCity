@@ -36,6 +36,20 @@ class IssueService {
     return _storage.loadIssues();
   }
 
+  /// Delete ONLY the selected issues by id
+  Future<void> deleteByIds(Set<String> ids) async {
+    if (ids.isEmpty) return;
+
+    final issues = await _storage.loadIssues();
+    final updated = issues.where((i) => !ids.contains(i.id)).toList();
+    await _storage.saveIssues(updated);
+  }
+
+  /// Delete a single issue
+  Future<void> deleteById(String id) async {
+    await deleteByIds({id});
+  }
+
   Future<void> clearAll() async {
     await _storage.clearIssues();
   }
