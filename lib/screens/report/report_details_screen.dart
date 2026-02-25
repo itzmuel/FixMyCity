@@ -1,10 +1,15 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../app/theme.dart';
 import '../../models/issue.dart';
 
 class ReportDetailsScreen extends StatelessWidget {
   final Issue issue;
+  static const String _photosBucket = String.fromEnvironment(
+    'SUPABASE_PHOTOS_BUCKET',
+    defaultValue: 'user-uploads',
+  );
 
   const ReportDetailsScreen({super.key, required this.issue});
 
@@ -32,14 +37,7 @@ class ReportDetailsScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                       color: Colors.white,
                     ),
-                    child: issue.photoPath == null
-                        ? const Center(
-                            child: Text('No photo', style: TextStyle(color: AppColors.muted)),
-                          )
-                        : ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
-                            child: Image.file(File(issue.photoPath!), fit: BoxFit.cover),
-                          ),
+                    child: _buildPhoto(issue.photoPath),
                   ),
                 ],
               ),
@@ -74,12 +72,12 @@ class ReportDetailsScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   _InfoRow(label: 'Reference ID', value: issue.id),
                   _InfoRow(label: 'Created', value: _formatDate(issue.createdAt)),
-                  _InfoRow(label: 'Address', value: issue.address?.trim().isNotEmpty == true ? issue.address!.trim() : '—'),
+                  _InfoRow(label: 'Address', value: issue.address?.trim().isNotEmpty == true ? issue.address!.trim() : '�'),
                   _InfoRow(
                     label: 'Coordinates',
                     value: (issue.latitude != null && issue.longitude != null)
                         ? '${issue.latitude!.toStringAsFixed(5)}, ${issue.longitude!.toStringAsFixed(5)}'
-                        : '—',
+                        : '�',
                   ),
                 ],
               ),
@@ -118,6 +116,57 @@ class ReportDetailsScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPhoto(String? path) {
+    if (path == null || path.trim().isEmpty) {
+      return const Center(child: Text('No photo', style: TextStyle(color: AppColors.muted)));
+    }
+
+    final trimmed = path.trim();
+    final isRemote = trimmed.startsWith('http://') || trimmed.startsWith('https://');
+    final isLikelyStoragePath = !trimmed.startsWith('/') && !trimmed.contains('\\');
+
+    if (isRemote) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Image.network(
+          trimmed,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => const Center(
+            child: Text('Could not load photo', style: TextStyle(color: AppColors.muted)),
+          ),
+        ),
+      );
+    }
+
+    if (isLikelyStoragePath) {
+      final publicUrl = Supabase.instance.client.storage
+          .from(_photosBucket)
+          .getPublicUrl(trimmed);
+
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Image.network(
+          publicUrl,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => const Center(
+            child: Text('Could not load photo', style: TextStyle(color: AppColors.muted)),
+          ),
+        ),
+      );
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: Image.file(
+        File(trimmed),
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => const Center(
+          child: Text('Could not load photo', style: TextStyle(color: AppColors.muted)),
+        ),
       ),
     );
   }

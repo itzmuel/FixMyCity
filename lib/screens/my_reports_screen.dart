@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../app/theme.dart';
 import '../app/refresh_bus.dart';
@@ -17,9 +18,6 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
   late Future<List<Issue>> _future;
 
   int _lastTick = 0;
-
-  bool _selectMode = false;
-  final Set<String> _selectedIds = <String>{};
 
   @override
   void initState() {
@@ -51,87 +49,11 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
     await _future;
   }
 
-  void _toggleSelectionMode([bool? value]) {
-    setState(() {
-      _selectMode = value ?? !_selectMode;
-      if (!_selectMode) _selectedIds.clear();
-    });
-  }
-
-  void _toggleSelected(String id) {
-    setState(() {
-      if (_selectedIds.contains(id)) {
-        _selectedIds.remove(id);
-      } else {
-        _selectedIds.add(id);
-      }
-    });
-  }
-
-  Future<void> _confirmDeleteSelected() async {
-    if (_selectedIds.isEmpty) return;
-
-    final count = _selectedIds.length;
-
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete reports?'),
-        content: Text('Are you sure you want to delete $count selected report(s)? This cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-
-    if (ok != true) return;
-
-    await issueService.deleteByIds(_selectedIds);
-
-    // refresh UI
-    if (!mounted) return;
-    refreshBus.pingHome();      // stats on home update too
-    refreshBus.pingMyReports(); // and this list
-    _toggleSelectionMode(false);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Deleted $count report(s).')),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final selectedCount = _selectedIds.length;
-
     return Scaffold(
       appBar: AppBar(
-        title: Text(_selectMode ? 'Select Reports' : 'My Reports'),
-        actions: [
-          if (_selectMode) ...[
-            IconButton(
-              onPressed: selectedCount == 0 ? null : _confirmDeleteSelected,
-              icon: const Icon(Icons.delete_outline),
-              tooltip: 'Delete selected',
-            ),
-            IconButton(
-              onPressed: () => _toggleSelectionMode(false),
-              icon: const Icon(Icons.close),
-              tooltip: 'Cancel selection',
-            ),
-          ] else ...[
-            TextButton(
-              onPressed: () => _toggleSelectionMode(true),
-              child: const Text('Select'),
-            ),
-          ],
-        ],
+        title: const Text('My Reports'),
       ),
       body: FutureBuilder<List<Issue>>(
         future: _future,
@@ -140,6 +62,38 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
 
           if (snap.connectionState == ConnectionState.waiting && issues.isEmpty) {
             return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snap.hasError && issues.isEmpty) {
+            return ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(18),
+                    child: Column(
+                      children: [
+                        const Icon(Icons.lock_outline, size: 36, color: AppColors.muted),
+                        const SizedBox(height: 10),
+                        const Text('You need to sign in',
+                            style: TextStyle(fontWeight: FontWeight.w800)),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Your session expired or is missing. Please sign in again to view reports.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: AppColors.muted),
+                        ),
+                        const SizedBox(height: 12),
+                        FilledButton(
+                          onPressed: () => context.go('/auth'),
+                          child: const Text('Go to Sign in'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            );
           }
 
           if (issues.isEmpty) {
@@ -173,16 +127,9 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
               separatorBuilder: (_, __) => const SizedBox(height: 10),
               itemBuilder: (context, i) {
                 final issue = issues[i];
-                final isSelected = _selectedIds.contains(issue.id);
 
                 return Card(
                   child: ListTile(
-                    leading: _selectMode
-                        ? Checkbox(
-                            value: isSelected,
-                            onChanged: (_) => _toggleSelected(issue.id),
-                          )
-                        : null,
                     title: Text(
                       issue.category.label,
                       style: const TextStyle(fontWeight: FontWeight.w800),
@@ -193,26 +140,14 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(color: AppColors.muted),
                     ),
-                    trailing: _selectMode
-                        ? null
-                        : _StatusChip(status: issue.status),
-                    onLongPress: () {
-                      if (!_selectMode) {
-                        _toggleSelectionMode(true);
-                        _toggleSelected(issue.id);
-                      }
-                    },
+                    trailing: _StatusChip(status: issue.status),
                     onTap: () {
-                      if (_selectMode) {
-                        _toggleSelected(issue.id);
-                      } else {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ReportDetailsScreen(issue: issue),
-                          ),
-                        );
-                      }
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ReportDetailsScreen(issue: issue),
+                        ),
+                      );
                     },
                   ),
                 );
@@ -221,20 +156,6 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
           );
         },
       ),
-      bottomNavigationBar: _selectMode
-          ? SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                child: FilledButton.icon(
-                  onPressed: selectedCount == 0 ? null : _confirmDeleteSelected,
-                  icon: const Icon(Icons.delete_outline),
-                  label: Text(selectedCount == 0
-                      ? 'Select reports to delete'
-                      : 'Delete selected ($selectedCount)'),
-                ),
-              ),
-            )
-          : null,
     );
   }
 }

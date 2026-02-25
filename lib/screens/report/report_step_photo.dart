@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../models/report_draft.dart';
 import '../../widgets/step_dots.dart';
 import '../../app/theme.dart';
@@ -31,14 +32,40 @@ class _ReportStepPhotoState extends State<ReportStepPhoto> {
       final xfile = await _picker.pickImage(source: source, imageQuality: 80);
       if (xfile == null) return;
 
+      final savedPath = await _savePickedImageToAppStorage(xfile);
+
       setState(() {
-        widget.draft.photoPath = xfile.path;
+        widget.draft.photoPath = savedPath;
       });
     } catch (_) {
       _toast('Could not pick image.');
     } finally {
-      setState(() => _picking = false);
+      if (mounted) {
+        setState(() => _picking = false);
+      }
     }
+  }
+
+  Future<String> _savePickedImageToAppStorage(XFile xfile) async {
+    final docsDir = await getApplicationDocumentsDirectory();
+    final photosDir = Directory('${docsDir.path}/report_photos');
+    if (!await photosDir.exists()) {
+      await photosDir.create(recursive: true);
+    }
+
+    final ext = _fileExtension(xfile.name.isNotEmpty ? xfile.name : xfile.path);
+    final fileName = 'report_${DateTime.now().millisecondsSinceEpoch}$ext';
+    final savedFile = File('${photosDir.path}/$fileName');
+
+    // Copy the picked image out of the temp cache so it still exists on submit.
+    await File(xfile.path).copy(savedFile.path);
+    return savedFile.path;
+  }
+
+  String _fileExtension(String path) {
+    final dot = path.lastIndexOf('.');
+    if (dot <= 0 || dot == path.length - 1) return '.jpg';
+    return path.substring(dot);
   }
 
   void _toast(String msg) {

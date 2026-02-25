@@ -88,6 +88,38 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             return const Center(child: CircularProgressIndicator());
           }
 
+          if (snap.hasError && issues.isEmpty) {
+            return ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(18),
+                    child: Column(
+                      children: [
+                        const Icon(Icons.lock_outline, size: 36, color: AppColors.muted),
+                        const SizedBox(height: 10),
+                        const Text('You need to sign in',
+                            style: TextStyle(fontWeight: FontWeight.w800)),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Your session expired or is missing. Please sign in again to continue.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: AppColors.muted),
+                        ),
+                        const SizedBox(height: 12),
+                        FilledButton(
+                          onPressed: () => context.go('/auth'),
+                          child: const Text('Go to Sign in'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            );
+          }
+
           return RefreshIndicator(
             onRefresh: _refresh,
             child: ListView(

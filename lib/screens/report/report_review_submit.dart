@@ -56,6 +56,15 @@ class _ReportReviewSubmitState extends State<ReportReviewSubmit> {
     } catch (e) {
       if (!mounted) return;
 
+      if (e is StateError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Your session expired. Please sign in again.')),
+        );
+        context.go('/auth');
+        setState(() => _submitting = false);
+        return;
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Could not submit report. Please try again.\n$e')),
       );
