@@ -65,8 +65,21 @@ class _ReportReviewSubmitState extends State<ReportReviewSubmit> {
         return;
       }
 
+      // Provide helpful user-friendly error messages
+      String userMessage = 'Could not submit report. Please try again.';
+      if (e.toString().contains('Connection') || 
+          e.toString().contains('SocketException') || 
+          e.toString().contains('network')) {
+        userMessage = 'Network connection error. Check your internet and try again.';
+      } else if (e.toString().contains('401') || e.toString().contains('403')) {
+        userMessage = 'Access denied. Please sign in again.';
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not submit report. Please try again.\n$e')),
+        SnackBar(
+          content: Text(userMessage),
+          duration: const Duration(seconds: 4),
+        ),
       );
 
       setState(() => _submitting = false);

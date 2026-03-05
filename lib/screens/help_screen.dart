@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/help_row.dart';
 import '../widgets/section_title.dart';
 import '../app/theme.dart';
+import '../services/auth_service.dart';
 
 class HelpScreen extends StatelessWidget {
   const HelpScreen({super.key});
@@ -17,7 +17,7 @@ class HelpScreen extends StatelessWidget {
             tooltip: 'Sign out',
             icon: const Icon(Icons.logout),
             onPressed: () async {
-              await Supabase.instance.client.auth.signOut();
+              await authService.signOut();
             },
           ),
         ],

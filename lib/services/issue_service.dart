@@ -15,9 +15,8 @@ class IssueService {
 
   /// Create a new issue from the report draft and persist it
   Future<Issue> submitReport(ReportDraft draft) async {
-    await _ensureSignedIn();
-    final userId = _client.auth.currentUser?.id;
-    if (userId == null || userId.isEmpty) {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) {
       throw StateError('You must be signed in to submit a report.');
     }
 
@@ -28,6 +27,10 @@ class IssueService {
       uploadedPhotoPath = await _uploadPhotoIfNeeded(issueId: id, localPath: draft.photoPath);
     } on StorageException catch (e) {
       if (!_isStorageAuthorizationError(e)) rethrow;
+      uploadedPhotoPath = null;
+    } catch (e) {
+      // Handle network/socket errors - allow report to submit without photo
+      print('Photo upload failed (network error): $e');
       uploadedPhotoPath = null;
     }
 
@@ -43,8 +46,7 @@ class IssueService {
       photoPath: uploadedPhotoPath,
     );
 
-    final row = issue.toSupabaseRow();
-    row['reporter_id'] = userId;
+    final row = issue.toSupabaseRow(user.id);
     try {
       await _client.from('issues').insert(row);
     } on PostgrestException catch (e) {

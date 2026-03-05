@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../app/theme.dart';
+import '../../services/auth_service.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -19,8 +20,6 @@ class _AuthScreenState extends State<AuthScreen> {
   bool _isSignUp = false;
   bool _isSubmitting = false;
 
-  SupabaseClient get _client => Supabase.instance.client;
-
   @override
   void dispose() {
     _emailController.dispose();
@@ -37,22 +36,24 @@ class _AuthScreenState extends State<AuthScreen> {
 
     try {
       if (_isSignUp) {
-        await _client.auth.signUp(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-        );
+        await authService.signUp(_emailController.text.trim(), _passwordController.text);
+
+        setState(() {
+          _isSignUp = false;
+          _passwordController.clear();
+          _confirmController.clear();
+        });
 
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Account created. If email confirmation is enabled, confirm your email first.'),
+            content: Text(
+              'Account created. Check your email to confirm, then sign in.',
+            ),
           ),
         );
       } else {
-        await _client.auth.signInWithPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-        );
+        await authService.signIn(_emailController.text.trim(), _passwordController.text);
       }
     } on AuthException catch (e) {
       if (!mounted) return;
