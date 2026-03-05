@@ -134,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                           width: 72,
                           height: 72,
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.10), // 10%
+                            color: AppColors.primary.withValues(alpha: 0.10),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
