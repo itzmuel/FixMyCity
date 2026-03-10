@@ -8,7 +8,7 @@ class ReportDetailsScreen extends StatelessWidget {
   final Issue issue;
   static const String _photosBucket = String.fromEnvironment(
     'SUPABASE_PHOTOS_BUCKET',
-    defaultValue: 'user-uploads',
+    defaultValue: 'issue-photos',
   );
 
   const ReportDetailsScreen({super.key, required this.issue});

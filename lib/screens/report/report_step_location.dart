@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import '../../app/theme.dart';
 import '../../models/report_draft.dart';
 import '../../widgets/step_dots.dart';
+import '../../widgets/location_map.dart';
 
 class ReportStepLocation extends StatefulWidget {
   final ReportDraft draft;
@@ -256,8 +257,6 @@ class _ReportStepLocationState extends State<ReportStepLocation> {
 
   @override
   Widget build(BuildContext context) {
-    final addr = widget.draft.address?.trim();
-
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -274,27 +273,18 @@ class _ReportStepLocationState extends State<ReportStepLocation> {
         ),
         const SizedBox(height: 12),
 
-        // Map placeholder (address only)
+        // Map with location pin
         Container(
           height: 180,
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            color: Colors.white,
             border: Border.all(color: AppColors.border),
             borderRadius: BorderRadius.circular(18),
           ),
-          child: Center(
-            child: Text(
-              widget.draft.latitude != null
-                  ? (addr != null && addr.isNotEmpty
-                      ? 'Pinned at:\n$addr'
-                      : 'Location pinned\n(Address unavailable)')
-                  : 'Map Preview (placeholder)',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppColors.muted,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+          child: LocationMapPreview(
+            latitude: widget.draft.latitude,
+            longitude: widget.draft.longitude,
+            address: widget.draft.address,
           ),
         ),
 

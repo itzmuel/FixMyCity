@@ -22,17 +22,8 @@ class IssueService {
 
     final now = DateTime.now();
     final id = 'FM-${const Uuid().v4().substring(0, 8).toUpperCase()}';
-    String? uploadedPhotoPath;
-    try {
-      uploadedPhotoPath = await _uploadPhotoIfNeeded(issueId: id, localPath: draft.photoPath);
-    } on StorageException catch (e) {
-      if (!_isStorageAuthorizationError(e)) rethrow;
-      uploadedPhotoPath = null;
-    } catch (e) {
-      // Handle network/socket errors - allow report to submit without photo
-      print('Photo upload failed (network error): $e');
-      uploadedPhotoPath = null;
-    }
+    final uploadedPhotoPath =
+        await _uploadPhotoIfNeeded(issueId: id, localPath: draft.photoPath);
 
     final issue = Issue(
       id: id,
@@ -127,14 +118,6 @@ class IssueService {
   Future<void> _ensureSignedIn() async {
     if (_client.auth.currentSession != null) return;
     throw StateError('You must sign in to use this feature.');
-  }
-
-  bool _isStorageAuthorizationError(StorageException e) {
-    final code = '${e.statusCode}'.trim();
-    if (code == '401' || code == '403') return true;
-
-    final message = e.message.toLowerCase();
-    return message.contains('row-level security') || message.contains('unauthorized');
   }
 
   bool _isMissingPhotoColumnError(PostgrestException e) {

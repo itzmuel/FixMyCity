@@ -51,5 +51,7 @@
 	<string>FixMyCity uses the camera to capture photos of reported issues.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>FixMyCity uses your photo library to attach images to reports.</string>
+	<key>com.google.ios.maps.API_KEY</key>
+	<string>AIzaSyDXabmESRYcFl5NG-N4W6qsARDDmjYm5pY</string>
 </dict>
 </plist>
