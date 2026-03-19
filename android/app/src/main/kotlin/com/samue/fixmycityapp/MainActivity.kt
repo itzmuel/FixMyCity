@@ -1,4 +1,4 @@
-package com.example.fixmycity_app
+package com.samue.fixmycityapp
 
 import io.flutter.embedding.android.FlutterActivity
 

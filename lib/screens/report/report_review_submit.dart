@@ -65,14 +65,26 @@ class _ReportReviewSubmitState extends State<ReportReviewSubmit> {
         return;
       }
 
-      // Provide helpful user-friendly error messages
+      // Provide explicit submit errors so backend/config issues are visible.
+      final errorText = e.toString().toLowerCase();
       String userMessage = 'Could not submit report. Please try again.';
-      if (e.toString().contains('Connection') || 
-          e.toString().contains('SocketException') || 
-          e.toString().contains('network')) {
-        userMessage = 'Network connection error. Check your internet and try again.';
-      } else if (e.toString().contains('401') || e.toString().contains('403')) {
+      if (errorText.contains('failed to fetch') ||
+          errorText.contains('connection') ||
+          errorText.contains('socketexception') ||
+          errorText.contains('network')) {
+        userMessage =
+            'Cannot reach Supabase right now. Check internet connection and project API settings.';
+      } else if (errorText.contains('401') ||
+          errorText.contains('403') ||
+          errorText.contains('jwt') ||
+          errorText.contains('not authorized') ||
+          errorText.contains('permission')) {
         userMessage = 'Access denied. Please sign in again.';
+      } else if (errorText.contains('postgrestexception') ||
+          errorText.contains('violates') ||
+          errorText.contains('rls')) {
+        userMessage =
+            'Server rejected this report. Verify database policies/schema and try again.';
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
