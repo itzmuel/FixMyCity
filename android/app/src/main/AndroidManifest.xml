@@ -6,7 +6,7 @@
 
     <application
 
-        android:label="fixmycity_app"
+        android:label="fixmycity"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
     

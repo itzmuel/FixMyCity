@@ -1,6 +1,6 @@
 {
-    "name": "fixmycity_app",
-    "short_name": "fixmycity_app",
+    "name": "fixmycity",
+    "short_name": "fixmycity",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#f5f7fb",

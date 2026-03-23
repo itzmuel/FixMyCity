@@ -1,4 +1,4 @@
-name: fixmycity_app
+name: fixmycity
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -105,28 +105,28 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: assets/images/bg_blurred.png
+  image_path: assets/images/fix my city.png
   min_sdk_android: 21
   remove_alpha_ios: true
   web:
     generate: true
-    image_path: assets/images/bg_blurred.png
+    image_path: assets/images/fix my city.png
     background_color: "#f5f7fb"
     theme_color: "#2563eb"
   windows:
     generate: true
-    image_path: assets/images/bg_blurred.png
+    image_path: assets/images/fix my city.png
     icon_size: 48
   macos:
     generate: true
-    image_path: assets/images/bg_blurred.png
+    image_path: assets/images/fix my city.png
 
 flutter_native_splash:
   color: "#f5f7fb"
-  image: assets/images/bg_blurred.png
+  image: assets/images/fix my city.png
   android: true
   ios: true
   web: false
   android_12:
     color: "#f5f7fb"
-    image: assets/images/bg_blurred.png
+    image: assets/images/fix my city.png

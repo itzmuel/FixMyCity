@@ -203,10 +203,6 @@ class _ReportReviewSubmitState extends State<ReportReviewSubmit> {
   }
 
   static String _locationText(ReportDraft d) {
-    if (d.latitude != null && d.longitude != null) {
-      return '${d.latitude!.toStringAsFixed(5)}, ${d.longitude!.toStringAsFixed(5)}'
-          '${(d.address != null && d.address!.isNotEmpty) ? '\n${d.address}' : ''}';
-    }
     return d.address?.trim().isNotEmpty == true ? d.address!.trim() : '—';
   }
 }

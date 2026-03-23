@@ -72,13 +72,7 @@ class ReportDetailsScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   _InfoRow(label: 'Reference ID', value: issue.id),
                   _InfoRow(label: 'Created', value: _formatDate(issue.createdAt)),
-                  _InfoRow(label: 'Address', value: issue.address?.trim().isNotEmpty == true ? issue.address!.trim() : '�'),
-                  _InfoRow(
-                    label: 'Coordinates',
-                    value: (issue.latitude != null && issue.longitude != null)
-                        ? '${issue.latitude!.toStringAsFixed(5)}, ${issue.longitude!.toStringAsFixed(5)}'
-                        : '�',
-                  ),
+                  _InfoRow(label: 'Address', value: issue.address?.trim().isNotEmpty == true ? issue.address!.trim() : '—'),
                 ],
               ),
             ),
