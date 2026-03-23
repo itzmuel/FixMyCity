@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../widgets/help_row.dart';
 import '../widgets/section_title.dart';
 import '../app/theme.dart';
@@ -75,14 +76,11 @@ class HelpScreen extends StatelessWidget {
                           backgroundColor: AppColors.danger,
                           foregroundColor: Colors.white,
                         ),
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'In production, this would open the phone dialer.',
-                              ),
-                            ),
-                          );
+                        onPressed: () async {
+                          final uri = Uri(scheme: 'tel', path: '911');
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(uri);
+                          }
                         },
                         icon: const Icon(Icons.call),
                         label: const Text('Call 911'),

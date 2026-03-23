@@ -38,6 +38,7 @@ dependencies:
   shared_preferences: ^2.3.2
   geocoding: ^4.0.0
   supabase_flutter: ^2.9.1
+  url_launcher: ^6.3.1
   path_provider: ^2.1.5
   google_maps_flutter: ^2.10.0
 
