@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../app/theme.dart';
 import '../models/issue.dart';
@@ -9,7 +10,6 @@ import 'report/report_details_screen.dart';
 import '../app/route_observer.dart';
 import '../app/refresh_bus.dart';
 
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -18,12 +18,17 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with RouteAware {
-  late Future<List<Issue>> _future;
+  late Future<_HomeData> _future;
+
+  static const String _sourceMunicipal =
+      'https://www.kitchener.ca/en/living-in-kitchener/report-a-problem.aspx';
+  static const String _sourceOntario =
+      'https://www.ontario.ca/page/municipalities';
 
   @override
   void initState() {
     super.initState();
-    _future = issueService.getMyReports();
+    _future = _loadHomeData();
 
     // ✅ Listen for tab re-select / tab navigation pings
     refreshBus.addListener(_onRefreshPing);
@@ -60,35 +65,57 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   Future<void> _refresh() async {
     setState(() {
-      _future = issueService.getMyReports();
+      _future = _loadHomeData();
     });
     await _future;
   }
 
+  Future<_HomeData> _loadHomeData() async {
+    final results = await Future.wait<dynamic>([
+      issueService.getCommunityIssueStats(),
+      issueService.getCommunityRecentReports(limit: 3),
+    ]);
+
+    return _HomeData(
+      stats: results[0] as CommunityIssueStats,
+      recent: results[1] as List<Issue>,
+    );
+  }
+
+  Future<void> _openSource(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      return;
+    }
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Could not open source link.')),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('FixMyCity')),
-      body: FutureBuilder<List<Issue>>(
+      body: FutureBuilder<_HomeData>(
         future: _future,
         builder: (context, snap) {
-          final issues = snap.data ?? [];
+          final data = snap.data;
+          final stats = data?.stats;
+          final recent = data?.recent ?? const <Issue>[];
 
-          final submitted =
-              issues.where((i) => i.status == IssueStatus.submitted).length;
-          final inProgress =
-              issues.where((i) => i.status == IssueStatus.inProgress).length;
-          final resolved =
-              issues.where((i) => i.status == IssueStatus.resolved).length;
+          final submitted = stats?.submitted ?? 0;
+          final inProgress = stats?.inProgress ?? 0;
+          final resolved = stats?.resolved ?? 0;
 
-          final recent = issues.take(3).toList();
-
-          if (snap.connectionState == ConnectionState.waiting && issues.isEmpty) {
+          if (snap.connectionState == ConnectionState.waiting &&
+              recent.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (snap.hasError && issues.isEmpty) {
+          if (snap.hasError && recent.isEmpty) {
             return ListView(
               padding: const EdgeInsets.all(16),
               children: [
@@ -97,10 +124,16 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                     padding: const EdgeInsets.all(18),
                     child: Column(
                       children: [
-                        const Icon(Icons.lock_outline, size: 36, color: AppColors.muted),
+                        const Icon(
+                          Icons.lock_outline,
+                          size: 36,
+                          color: AppColors.muted,
+                        ),
                         const SizedBox(height: 10),
-                        const Text('You need to sign in',
-                            style: TextStyle(fontWeight: FontWeight.w800)),
+                        const Text(
+                          'You need to sign in',
+                          style: TextStyle(fontWeight: FontWeight.w800),
+                        ),
                         const SizedBox(height: 6),
                         const Text(
                           'Your session expired or is missing. Please sign in again to continue.',
@@ -146,7 +179,10 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                         const SizedBox(height: 14),
                         const Text(
                           'Make Your City Better',
-                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 6),
@@ -168,6 +204,53 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   ),
                 ),
 
+                const SizedBox(height: 12),
+
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: const [
+                            Icon(Icons.info_outline, color: AppColors.muted),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Important Notice',
+                                style: TextStyle(fontWeight: FontWeight.w900),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'FixMyCity is not a government app and does not represent any government entity. Government services and final issue handling are performed by official municipal authorities.',
+                          style: TextStyle(color: AppColors.muted),
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            OutlinedButton.icon(
+                              onPressed: () => _openSource(_sourceMunicipal),
+                              icon: const Icon(Icons.link),
+                              label: const Text('Municipal Source'),
+                            ),
+                            OutlinedButton.icon(
+                              onPressed: () => _openSource(_sourceOntario),
+                              icon: const Icon(Icons.link),
+                              label: const Text('Ontario Source'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
                 const SizedBox(height: 16),
 
                 const Text(
@@ -178,11 +261,20 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
                 Row(
                   children: [
-                    Expanded(child: StatTile(title: 'Submitted', value: '$submitted')),
+                    Expanded(
+                      child: StatTile(title: 'Submitted', value: '$submitted'),
+                    ),
                     const SizedBox(width: 10),
-                    Expanded(child: StatTile(title: 'In Progress', value: '$inProgress')),
+                    Expanded(
+                      child: StatTile(
+                        title: 'In Progress',
+                        value: '$inProgress',
+                      ),
+                    ),
                     const SizedBox(width: 10),
-                    Expanded(child: StatTile(title: 'Resolved', value: '$resolved')),
+                    Expanded(
+                      child: StatTile(title: 'Resolved', value: '$resolved'),
+                    ),
                   ],
                 ),
 
@@ -200,12 +292,21 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                       padding: const EdgeInsets.all(18),
                       child: Column(
                         children: const [
-                          Icon(Icons.description, size: 36, color: AppColors.muted),
+                          Icon(
+                            Icons.description,
+                            size: 36,
+                            color: AppColors.muted,
+                          ),
                           SizedBox(height: 10),
-                          Text('No reports yet', style: TextStyle(fontWeight: FontWeight.w800)),
+                          Text(
+                            'No reports yet',
+                            style: TextStyle(fontWeight: FontWeight.w800),
+                          ),
                           SizedBox(height: 6),
-                          Text('Be the first to report an issue!',
-                              style: TextStyle(color: AppColors.muted)),
+                          Text(
+                            'Be the first to report an issue!',
+                            style: TextStyle(color: AppColors.muted),
+                          ),
                         ],
                       ),
                     ),
@@ -231,7 +332,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => ReportDetailsScreen(issue: issue),
+                                builder:
+                                    (_) => ReportDetailsScreen(issue: issue),
                               ),
                             );
                           },
@@ -246,6 +348,13 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       ),
     );
   }
+}
+
+class _HomeData {
+  final CommunityIssueStats stats;
+  final List<Issue> recent;
+
+  const _HomeData({required this.stats, required this.recent});
 }
 
 class _StatusChip extends StatelessWidget {

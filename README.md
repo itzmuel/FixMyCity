@@ -1,16 +1,97 @@
-# fixmycity_app
+# FixMyCity Mobile App
 
-A new Flutter project.
+FixMyCity is a Flutter mobile app that lets residents report city issues such as potholes, damaged sidewalks, graffiti, and illegal dumping.
 
-## Getting Started
+Users can:
+- Create an account and sign in with email/password (Supabase Auth)
+- Submit reports with description, location, and photo
+- View and track their own reports
+- Browse community reports and status trends
 
-This project is a starting point for a Flutter application.
+## Tech Stack
 
-A few resources to get you started if this is your first Flutter project:
+- Flutter (Dart)
+- Supabase (Auth, Postgres, Storage)
+- go_router for app navigation
+- geolocator and geocoding for location capture and address resolution
+- image_picker for photo attachments
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Prerequisites
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- Flutter SDK compatible with Dart 3.7.x
+- Android Studio and/or Xcode for device builds
+- A Supabase project with required tables, RLS policies, and storage bucket
+
+## Local Setup
+
+1. Install dependencies:
+
+```bash
+flutter pub get
+```
+
+2. Confirm your Supabase project values in main.dart:
+- Supabase URL
+- Supabase anon key
+
+3. Run the app:
+
+```bash
+flutter run
+```
+
+## Auth Email Confirmation Redirect (Important)
+
+If email confirmation opens a localhost page in production, your Supabase URL configuration is incorrect.
+
+Use these settings in Supabase Dashboard:
+- Authentication -> URL Configuration -> Site URL must be a real HTTPS URL (not localhost)
+- Authentication -> URL Configuration -> Site URL: `https://fixmycityadmindashboard.vercel.app`
+- Authentication -> URL Configuration -> Redirect URLs must include both:
+
+```text
+https://fixmycityadmindashboard.vercel.app/email-confirmed
+fixmycityapp://login-callback/
+```
+
+When the confirmation link is clicked:
+- On mobile, the page auto-redirects to `fixmycityapp://login-callback/` which reopens the app.
+- On desktop, the page shows an "Email Confirmed" message with an Open App button.
+
+## Quality Checks
+
+Run before committing:
+
+```bash
+flutter analyze
+flutter test test/widget_test.dart
+```
+
+## Build Commands
+
+```bash
+flutter build apk --release
+flutter build appbundle --release
+```
+
+## Project Structure
+
+```text
+lib/
+	app/        # Router, theme, app-level state
+	models/     # Domain models
+	screens/    # UI screens and flows
+	services/   # Supabase, auth, issue services
+	shell/      # Bottom navigation shell
+	widgets/    # Shared UI widgets
+supabase/
+	migrations/ # SQL migration files
+```
+
+## Release and Policy Notes
+
+See RELEASE_RUNBOOK.md for:
+- Go/no-go checks
+- Auth and RLS verification
+- Smoke test checklist
+- Play Store policy and disclaimer checklist

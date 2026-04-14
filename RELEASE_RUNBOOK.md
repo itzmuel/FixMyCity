@@ -8,6 +8,11 @@ All items below must be complete before submitting a build.
 - Email provider enabled.
 - Anonymous sign-in disabled (manual dashboard step).
 - If email confirmation is enabled, user onboarding copy is clear in app.
+- Authentication URL Configuration:
+   - Supabase Dashboard -> Authentication -> URL Configuration -> Site URL must not be localhost in production.
+   - Add both redirect URLs to Redirect URLs:
+     - `https://fixmycityadmindashboard.vercel.app/email-confirmed`
+     - `fixmycityapp://login-callback/`
 
 2. Database policies
 - RLS enabled on `public.issues` and `public.admins`.
@@ -79,6 +84,11 @@ Test with at least one Android device and one iOS device.
 Disable anonymous auth in Supabase Dashboard:
 - Supabase Dashboard -> Authentication -> Providers -> Anonymous -> Disable.
 
+If users see "localhost can't be reached" after email confirmation:
+- Supabase Dashboard -> Authentication -> URL Configuration.
+- Replace localhost Site URL with a real HTTPS URL used by your project.
+- Ensure Redirect URLs includes `https://fixmycityadmindashboard.vercel.app/email-confirmed` and `fixmycityapp://login-callback/`.
+
 ## 7) Failed to Fetch Triage
 
 If users report "Failed to fetch" or connectivity issues:
@@ -97,3 +107,21 @@ If users report "Failed to fetch" or connectivity issues:
 3. Upload to store console.
 4. Attach release notes with known limitations.
 5. Record git commit SHA used for the build.
+
+## 9) Misleading Claims Policy Checklist (Play Store)
+
+Complete all items before submitting to Google Play.
+
+1. In-app disclaimer is visible on Home and Help screens.
+2. In-app links to official sources are visible and functional.
+3. Store listing includes at least one official government source URL.
+4. Store listing includes non-government disclaimer text.
+
+Recommended Play Console text:
+
+- **Disclaimer (add near top of description):**
+   "FixMyCity is an independent civic reporting app and does not represent any government entity. For official information and services, use your municipality's official channels."
+
+- **Official Sources (replace with your city links if needed):**
+   - https://www.kitchener.ca/en/living-in-kitchener/report-a-problem.aspx
+   - https://www.ontario.ca/page/municipalities

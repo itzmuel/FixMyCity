@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../shell/app_shell.dart';
 import '../screens/home_screen.dart';
 import '../screens/my_reports_screen.dart';
+import '../screens/community_reports_screen.dart';
 import '../screens/help_screen.dart';
 import '../screens/auth/auth_screen.dart';
 import '../screens/report/report_flow_screen.dart';
@@ -31,7 +32,14 @@ final router = GoRouter(
       routes: [
         GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
         GoRoute(path: '/report', builder: (_, __) => const ReportFlowScreen()),
-        GoRoute(path: '/my-reports', builder: (_, __) => const MyReportsScreen()),
+        GoRoute(
+          path: '/my-reports',
+          builder: (_, __) => const MyReportsScreen(),
+        ),
+        GoRoute(
+          path: '/community-reports',
+          builder: (_, __) => const CommunityReportsScreen(),
+        ),
         GoRoute(path: '/help', builder: (_, __) => const HelpScreen()),
       ],
     ),
