@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../models/report_draft.dart';
+import '../../services/upload_validation.dart';
 import '../../widgets/step_dots.dart';
 import '../../app/theme.dart';
 
@@ -31,6 +32,15 @@ class _ReportStepPhotoState extends State<ReportStepPhoto> {
     try {
       final xfile = await _picker.pickImage(source: source, imageQuality: 80);
       if (xfile == null) return;
+
+      final validation = await validateIssuePhoto(
+        xfile.path,
+        mimeType: xfile.mimeType,
+      );
+      if (!validation.valid) {
+        _toast(validation.error!);
+        return;
+      }
 
       final savedPath = await _savePickedImageToAppStorage(xfile);
 

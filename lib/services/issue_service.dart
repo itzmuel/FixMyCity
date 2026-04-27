@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../models/issue.dart';
 import '../models/report_draft.dart';
+import 'upload_validation.dart';
 
 class CommunityIssueStats {
   final int submitted;
@@ -184,6 +185,12 @@ class IssueService {
     final file = File(localPath);
     if (!await file.exists()) {
       throw StateError('Selected photo file was not found: $localPath');
+    }
+
+    // Validate before upload (mirrors admin dashboard storage policy).
+    final validation = await validateIssuePhoto(localPath);
+    if (!validation.valid) {
+      throw StateError(validation.error ?? 'Photo validation failed.');
     }
 
     await _ensureSignedIn();

@@ -55,8 +55,8 @@ fixmycityapp://login-callback/
 ```
 
 When the confirmation link is clicked:
-- On mobile, the page auto-redirects to `fixmycityapp://login-callback/` which reopens the app.
-- On desktop, the page shows an "Email Confirmed" message with an Open App button.
+- Users are sent to a dedicated confirmation page that displays "Email Confirmed".
+- Users can then return to the app and sign in.
 
 ## Quality Checks
 
