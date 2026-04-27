@@ -22,6 +22,16 @@ class CommunityIssueStats {
   });
 }
 
+class IssueAuthRequiredException implements Exception {
+  final String message;
+  const IssueAuthRequiredException([
+    this.message = 'You must sign in to use this feature.',
+  ]);
+
+  @override
+  String toString() => 'IssueAuthRequiredException: $message';
+}
+
 class IssueService {
   static const String _photosBucket = String.fromEnvironment(
     'SUPABASE_PHOTOS_BUCKET',
@@ -120,13 +130,23 @@ class IssueService {
 
   Future<List<Issue>> getMyReports() async {
     final user = await _ensureSignedIn();
-    final rows = await _client
-        .from('issues')
-        .select()
-        .eq('reporter_id', user.id)
-        .order('created_at', ascending: false);
+    late final List<dynamic> rows;
+    try {
+      rows = await _client
+          .from('issues')
+          .select()
+          .eq('reporter_id', user.id)
+          .order('created_at', ascending: false);
+    } on PostgrestException catch (e) {
+      if (_isAuthPostgrestError(e)) {
+        throw const IssueAuthRequiredException(
+          'Your session expired or is missing. Please sign in again to view reports.',
+        );
+      }
+      rethrow;
+    }
 
-    return (rows as List<dynamic>)
+    return rows
         .map((row) => Issue.fromSupabaseRow(row as Map<String, dynamic>))
         .toList();
   }
@@ -257,7 +277,7 @@ class IssueService {
   Future<User> _ensureSignedIn() async {
     final user = _client.auth.currentUser;
     if (user != null) return user;
-    throw StateError('You must sign in to use this feature.');
+    throw const IssueAuthRequiredException();
   }
 
   bool _isMissingPhotoColumnError(PostgrestException e) {
@@ -266,6 +286,23 @@ class IssueService {
     return code == 'PGRST204' &&
         (message.contains("'photo_path' column") ||
             message.contains("'photo_url' column"));
+  }
+
+  bool _isAuthPostgrestError(PostgrestException e) {
+    final code = (e.code ?? '').trim();
+    final msg = e.message.toLowerCase();
+    final details = (e.details ?? '').toString().toLowerCase();
+    final hint = (e.hint ?? '').toString().toLowerCase();
+    final text = '$msg $details $hint';
+
+    return code == '401' ||
+        code == '403' ||
+        code == 'PGRST301' ||
+        text.contains('jwt') ||
+        text.contains('not authenticated') ||
+        text.contains('invalid token') ||
+        text.contains('expired') ||
+        text.contains('auth');
   }
 
   String _fileExtension(String path) {

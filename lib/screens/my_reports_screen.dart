@@ -65,6 +65,7 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
           }
 
           if (snap.hasError && issues.isEmpty) {
+            final isAuthError = snap.error is IssueAuthRequiredException;
             return ListView(
               padding: const EdgeInsets.all(16),
               children: [
@@ -73,21 +74,35 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
                     padding: const EdgeInsets.all(18),
                     child: Column(
                       children: [
-                        const Icon(Icons.lock_outline, size: 36, color: AppColors.muted),
+                        Icon(
+                          isAuthError ? Icons.lock_outline : Icons.cloud_off,
+                          size: 36,
+                          color: AppColors.muted,
+                        ),
                         const SizedBox(height: 10),
-                        const Text('You need to sign in',
-                            style: TextStyle(fontWeight: FontWeight.w800)),
+                        Text(
+                          isAuthError ? 'You need to sign in' : 'Could not load reports',
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
                         const SizedBox(height: 6),
-                        const Text(
-                          'Your session expired or is missing. Please sign in again to view reports.',
+                        Text(
+                          isAuthError
+                              ? 'Your session expired or is missing. Please sign in again to view reports.'
+                              : 'We could not fetch your reports right now. Check your connection and try again.',
                           textAlign: TextAlign.center,
-                          style: TextStyle(color: AppColors.muted),
+                          style: const TextStyle(color: AppColors.muted),
                         ),
                         const SizedBox(height: 12),
-                        FilledButton(
-                          onPressed: () => context.go('/auth'),
-                          child: const Text('Go to Sign in'),
-                        ),
+                        if (isAuthError)
+                          FilledButton(
+                            onPressed: () => context.go('/auth'),
+                            child: const Text('Go to Sign in'),
+                          )
+                        else
+                          FilledButton(
+                            onPressed: () => _refresh(),
+                            child: const Text('Try again'),
+                          ),
                       ],
                     ),
                   ),
