@@ -6,6 +6,7 @@ import '../../app/theme.dart';
 import '../../app/refresh_bus.dart';
 import '../../models/report_draft.dart';
 import '../../services/issue_service.dart';
+import '../../services/upload_validation.dart';
 
 class ReportReviewSubmit extends StatefulWidget {
   final ReportDraft draft;
@@ -55,6 +56,17 @@ class _ReportReviewSubmitState extends State<ReportReviewSubmit> {
       });
     } catch (e) {
       if (!mounted) return;
+
+      if (e is IssuePhotoValidationException) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+        setState(() => _submitting = false);
+        return;
+      }
 
       if (e is StateError) {
         ScaffoldMessenger.of(context).showSnackBar(

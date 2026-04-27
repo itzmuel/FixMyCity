@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../models/report_draft.dart';
+import '../../services/report_moderation_analytics_service.dart';
 import '../../services/upload_validation.dart';
 import '../../widgets/step_dots.dart';
 import '../../app/theme.dart';
@@ -36,8 +37,19 @@ class _ReportStepPhotoState extends State<ReportStepPhoto> {
       final validation = await validateIssuePhoto(
         xfile.path,
         mimeType: xfile.mimeType,
+        category: widget.draft.category,
+        description: widget.draft.description,
       );
       if (!validation.valid) {
+        await reportModerationAnalyticsService.logModerationEvent(
+          eventType: 'photo_pick',
+          allowed: false,
+          source: 'localFallback',
+          category: widget.draft.category,
+          reasonCode: validation.code?.name,
+          reasonMessage: validation.error,
+          score: validation.score,
+        );
         _toast(validation.error!);
         return;
       }
@@ -139,7 +151,7 @@ class _ReportStepPhotoState extends State<ReportStepPhoto> {
         const SizedBox(height: 10),
 
         const Text(
-          'Tip: Avoid faces and license plates if possible. Do not report emergencies.',
+          'Tip: Photos with faces, blur, or poor lighting are blocked before submission.',
           style: TextStyle(color: AppColors.muted, fontSize: 12),
         ),
 

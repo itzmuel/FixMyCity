@@ -4,7 +4,10 @@ import 'package:geocoding/geocoding.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../models/issue.dart';
+import '../models/issue_category.dart';
 import '../models/report_draft.dart';
+import 'photo_moderation_service.dart';
+import 'report_moderation_analytics_service.dart';
 import 'upload_validation.dart';
 
 class CommunityIssueStats {
@@ -38,9 +41,32 @@ class IssueService {
 
     final now = DateTime.now();
     final id = 'FM-${const Uuid().v4().substring(0, 8).toUpperCase()}';
+
+    final moderationDecision = await photoModerationService.moderateBeforeSubmit(
+      draft,
+    );
+    await reportModerationAnalyticsService.logModerationEvent(
+      eventType: 'pre_submit',
+      allowed: moderationDecision.allowed,
+      source: moderationDecision.source.name,
+      issueId: id,
+      category: draft.category,
+      reasonCode: moderationDecision.reasonCode,
+      reasonMessage: moderationDecision.reason,
+      score: moderationDecision.score,
+    );
+    if (!moderationDecision.allowed) {
+      throw IssuePhotoValidationException(
+        moderationDecision.reason ?? 'Photo did not pass moderation checks.',
+        code: PhotoValidationCode.notCivicRelevant,
+      );
+    }
+
     final uploadedPhotoPath = await _uploadPhotoIfNeeded(
       issueId: id,
       localPath: draft.photoPath,
+      category: draft.category,
+      description: draft.description,
     );
 
     final issue = Issue(
@@ -178,6 +204,8 @@ class IssueService {
   Future<String?> _uploadPhotoIfNeeded({
     required String issueId,
     required String? localPath,
+    required IssueCategory? category,
+    required String? description,
   }) async {
     if (localPath == null || localPath.trim().isEmpty) return null;
     if (_isRemoteUrl(localPath)) return localPath;
@@ -188,9 +216,16 @@ class IssueService {
     }
 
     // Validate before upload (mirrors admin dashboard storage policy).
-    final validation = await validateIssuePhoto(localPath);
+    final validation = await validateIssuePhoto(
+      localPath,
+      category: category,
+      description: description,
+    );
     if (!validation.valid) {
-      throw StateError(validation.error ?? 'Photo validation failed.');
+      throw IssuePhotoValidationException(
+        validation.error ?? 'Photo validation failed.',
+        code: validation.code,
+      );
     }
 
     await _ensureSignedIn();

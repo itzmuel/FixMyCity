@@ -101,7 +101,9 @@ using (
 );
 
 insert into public.admins(user_id)
-values ('14ca06dd-6504-4e1d-81f3-54badb711025')
+select u.id
+from auth.users u
+where u.id = '14ca06dd-6504-4e1d-81f3-54badb711025'
 on conflict (user_id) do nothing;
 
 -- 1) Ensure bucket exists
