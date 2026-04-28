@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../app/theme.dart';
 
 class SectionTitle extends StatelessWidget {
   final IconData icon;
@@ -15,12 +16,28 @@ class SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Icon(icon, color: iconColor),
-        const SizedBox(width: 8),
+        Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            color: AppColors.primaryLight,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            color: iconColor,
+            size: 16,
+          ),
+        ),
+        const SizedBox(width: 10),
         Text(
           title,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w900,
+          ),
         ),
       ],
     );

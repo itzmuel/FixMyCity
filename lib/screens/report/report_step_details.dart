@@ -51,7 +51,7 @@ class _ReportStepDetailsState extends State<ReportStepDetails> {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
         const SizedBox(height: 6),
         const Text('Provide details to help the city respond faster',
-            style: TextStyle(color: AppColors.muted)),
+            style: TextStyle(color: AppColors.textSecondary)),
         const SizedBox(height: 12),
 
         TextField(
@@ -61,7 +61,7 @@ class _ReportStepDetailsState extends State<ReportStepDetails> {
             labelText: 'Description',
             hintText: 'Example: Large pothole in the right lane causing cars to swerve.',
             filled: true,
-            fillColor: Colors.white,
+            fillColor: AppColors.bgCard,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
           ),
           onChanged: (_) => setState(() {}),
@@ -74,6 +74,12 @@ class _ReportStepDetailsState extends State<ReportStepDetails> {
             Expanded(
               child: OutlinedButton(
                 onPressed: widget.onBack,
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 52),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
                 child: const Text('Back'),
               ),
             ),
@@ -81,6 +87,13 @@ class _ReportStepDetailsState extends State<ReportStepDetails> {
             Expanded(
               child: FilledButton(
                 onPressed: _canContinue ? widget.onNext : null,
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 52),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                ),
                 child: const Text('Continue'),
               ),
             ),

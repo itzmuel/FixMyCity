@@ -6,6 +6,7 @@ import '../../app/theme.dart';
 import '../../app/refresh_bus.dart';
 import '../../models/report_draft.dart';
 import '../../services/issue_service.dart';
+import '../../services/upload_validation.dart';
 
 class ReportReviewSubmit extends StatefulWidget {
   final ReportDraft draft;
@@ -36,17 +37,12 @@ class _ReportReviewSubmitState extends State<ReportReviewSubmit> {
       await issueService.submitReport(widget.draft);
       if (!mounted) return;
 
-      // ✅ Immediately update Home + My Reports data
       refreshBus.pingHome();
       refreshBus.pingMyReports();
 
-      // ✅ Reset flow (clear draft + go back to first step)
       widget.onDone();
-
-      // ✅ Navigate to My Reports
       context.go('/my-reports');
 
-      // ✅ Show feedback on My Reports after navigation
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -56,8 +52,52 @@ class _ReportReviewSubmitState extends State<ReportReviewSubmit> {
     } catch (e) {
       if (!mounted) return;
 
+      if (e is IssuePhotoValidationException) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+        setState(() => _submitting = false);
+        return;
+      }
+
+      if (e is StateError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Your session expired. Please sign in again.')),
+        );
+        context.go('/auth');
+        setState(() => _submitting = false);
+        return;
+      }
+
+      final errorText = e.toString().toLowerCase();
+      String userMessage = 'Could not submit report. Please try again.';
+      if (errorText.contains('failed to fetch') ||
+          errorText.contains('connection') ||
+          errorText.contains('socketexception') ||
+          errorText.contains('network')) {
+        userMessage =
+            'Cannot reach Supabase right now. Check internet connection and project API settings.';
+      } else if (errorText.contains('401') ||
+          errorText.contains('403') ||
+          errorText.contains('jwt') ||
+          errorText.contains('not authorized') ||
+          errorText.contains('permission')) {
+        userMessage = 'Access denied. Please sign in again.';
+      } else if (errorText.contains('postgrestexception') ||
+          errorText.contains('violates') ||
+          errorText.contains('rls')) {
+        userMessage =
+            'Server rejected this report. Verify database policies/schema and try again.';
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not submit report. Please try again.\n$e')),
+        SnackBar(
+          content: Text(userMessage),
+          duration: const Duration(seconds: 4),
+        ),
       );
 
       setState(() => _submitting = false);
@@ -78,7 +118,7 @@ class _ReportReviewSubmitState extends State<ReportReviewSubmit> {
         const SizedBox(height: 6),
         const Text(
           'Confirm your report details before submitting.',
-          style: TextStyle(color: AppColors.muted),
+          style: TextStyle(color: AppColors.textSecondary),
         ),
         const SizedBox(height: 12),
 
@@ -100,36 +140,39 @@ class _ReportReviewSubmitState extends State<ReportReviewSubmit> {
         ),
         const SizedBox(height: 10),
 
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Photo', style: TextStyle(fontWeight: FontWeight.w800)),
-                const SizedBox(height: 10),
-                Container(
-                  height: 180,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: AppColors.border),
-                    borderRadius: BorderRadius.circular(16),
-                    color: Colors.white,
-                  ),
-                  child: widget.draft.photoPath == null
-                      ? const Center(
-                          child: Text('—', style: TextStyle(color: AppColors.muted)),
-                        )
-                      : ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: Image.file(
-                            File(widget.draft.photoPath!),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.bgCard,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: AppShadows.cardSoft,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Photo', style: TextStyle(fontWeight: FontWeight.w800)),
+              const SizedBox(height: 10),
+              Container(
+                height: 180,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.borderLight),
+                  borderRadius: BorderRadius.circular(16),
+                  color: AppColors.bgCard,
                 ),
-              ],
-            ),
+                child: widget.draft.photoPath == null
+                    ? const Center(
+                        child: Text('—', style: TextStyle(color: AppColors.textMuted)),
+                      )
+                    : ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.file(
+                          File(widget.draft.photoPath!),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+              ),
+            ],
           ),
         ),
 
@@ -140,6 +183,12 @@ class _ReportReviewSubmitState extends State<ReportReviewSubmit> {
             Expanded(
               child: OutlinedButton(
                 onPressed: _submitting ? null : widget.onBack,
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 52),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
                 child: const Text('Back'),
               ),
             ),
@@ -147,11 +196,21 @@ class _ReportReviewSubmitState extends State<ReportReviewSubmit> {
             Expanded(
               child: FilledButton(
                 onPressed: canSubmit ? _handleSubmit : null,
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 52),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                ),
                 child: _submitting
                     ? const SizedBox(
                         height: 18,
                         width: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
                     : const Text('Submit'),
               ),
@@ -162,17 +221,13 @@ class _ReportReviewSubmitState extends State<ReportReviewSubmit> {
         const SizedBox(height: 10),
         const Text(
           'By submitting, you confirm this is a non-emergency municipal issue and does not contain personal information.',
-          style: TextStyle(color: AppColors.muted, fontSize: 12),
+          style: TextStyle(color: AppColors.textMuted, fontSize: 12),
         ),
       ],
     );
   }
 
   static String _locationText(ReportDraft d) {
-    if (d.latitude != null && d.longitude != null) {
-      return '${d.latitude!.toStringAsFixed(5)}, ${d.longitude!.toStringAsFixed(5)}'
-          '${(d.address != null && d.address!.isNotEmpty) ? '\n${d.address}' : ''}';
-    }
     return d.address?.trim().isNotEmpty == true ? d.address!.trim() : '—';
   }
 }
@@ -185,17 +240,20 @@ class _ReviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
-            const SizedBox(height: 6),
-            Text(value, style: const TextStyle(color: Colors.black87)),
-          ],
-        ),
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.bgCard,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: AppShadows.cardSoft,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+          const SizedBox(height: 6),
+          Text(value, style: const TextStyle(color: AppColors.textMain)),
+        ],
       ),
     );
   }
