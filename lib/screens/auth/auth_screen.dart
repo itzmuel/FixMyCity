@@ -85,84 +85,103 @@ class _AuthScreenState extends State<AuthScreen> {
             padding: const EdgeInsets.all(16),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 460),
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
-                        const SizedBox(height: 6),
-                        Text(subtitle, style: const TextStyle(color: AppColors.muted)),
-                        const SizedBox(height: 16),
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppColors.bgCard,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: AppShadows.cardSoft,
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
+                      const SizedBox(height: 6),
+                      Text(subtitle, style: const TextStyle(color: AppColors.textSecondary)),
+                      const SizedBox(height: 20),
+                      TextFormField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
+                        decoration: const InputDecoration(labelText: 'Email'),
+                        validator: (value) {
+                          final v = (value ?? '').trim();
+                          if (v.isEmpty) return 'Email is required';
+                          if (!v.contains('@')) return 'Enter a valid email';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 14),
+                      TextFormField(
+                        controller: _passwordController,
+                        obscureText: true,
+                        textInputAction: _isSignUp ? TextInputAction.next : TextInputAction.done,
+                        decoration: const InputDecoration(labelText: 'Password'),
+                        validator: (value) {
+                          if ((value ?? '').isEmpty) return 'Password is required';
+                          if ((value ?? '').length < 6) return 'Use at least 6 characters';
+                          return null;
+                        },
+                      ),
+                      if (_isSignUp) ...[
+                        const SizedBox(height: 14),
                         TextFormField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          textInputAction: TextInputAction.next,
-                          decoration: const InputDecoration(labelText: 'Email'),
-                          validator: (value) {
-                            final v = (value ?? '').trim();
-                            if (v.isEmpty) return 'Email is required';
-                            if (!v.contains('@')) return 'Enter a valid email';
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _passwordController,
+                          controller: _confirmController,
                           obscureText: true,
-                          textInputAction: _isSignUp ? TextInputAction.next : TextInputAction.done,
-                          decoration: const InputDecoration(labelText: 'Password'),
+                          textInputAction: TextInputAction.done,
+                          decoration: const InputDecoration(labelText: 'Confirm password'),
                           validator: (value) {
-                            if ((value ?? '').isEmpty) return 'Password is required';
-                            if ((value ?? '').length < 6) return 'Use at least 6 characters';
+                            if ((value ?? '').isEmpty) return 'Confirm your password';
+                            if (value != _passwordController.text) return 'Passwords do not match';
                             return null;
                           },
                         ),
-                        if (_isSignUp) ...[
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _confirmController,
-                            obscureText: true,
-                            textInputAction: TextInputAction.done,
-                            decoration: const InputDecoration(labelText: 'Confirm password'),
-                            validator: (value) {
-                              if ((value ?? '').isEmpty) return 'Confirm your password';
-                              if (value != _passwordController.text) return 'Passwords do not match';
-                              return null;
-                            },
-                          ),
-                        ],
-                        const SizedBox(height: 18),
-                        FilledButton(
+                      ],
+                      const SizedBox(height: 22),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton(
                           onPressed: _isSubmitting ? null : _submit,
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size(double.infinity, 52),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            textStyle: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                           child: _isSubmitting
                               ? const SizedBox(
                                   width: 18,
                                   height: 18,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
                                 )
                               : Text(_isSignUp ? 'Sign up' : 'Sign in'),
                         ),
-                        const SizedBox(height: 10),
-                        TextButton(
-                          onPressed: _isSubmitting
-                              ? null
-                              : () {
-                                  setState(() {
-                                    _isSignUp = !_isSignUp;
-                                  });
-                                },
-                          child: Text(
-                            _isSignUp
-                                ? 'Already have an account? Sign in'
-                                : 'Need an account? Sign up',
-                          ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextButton(
+                        onPressed: _isSubmitting
+                            ? null
+                            : () {
+                                setState(() {
+                                  _isSignUp = !_isSignUp;
+                                });
+                              },
+                        child: Text(
+                          _isSignUp
+                              ? 'Already have an account? Sign in'
+                              : 'Need an account? Sign up',
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),

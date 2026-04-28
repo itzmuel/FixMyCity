@@ -30,7 +30,6 @@ class _ReportStepLocationState extends State<ReportStepLocation> {
 
   bool _locating = false;
 
-  // Auto-validate state
   Timer? _debounce;
   bool _validating = false;
   bool _addressValid = false;
@@ -62,19 +61,16 @@ class _ReportStepLocationState extends State<ReportStepLocation> {
     final typed = _addressCtrl.text.trim();
     widget.draft.address = typed.isEmpty ? null : typed;
 
-    // If user edits address after validation, mark as unvalidated until we re-check
     if (typed != _lastValidatedAddress) {
       _addressValid = false;
       _addressError = null;
 
-      // If they are typing manually, clear old coords until validated again
       if (typed.isNotEmpty) {
         widget.draft.latitude = null;
         widget.draft.longitude = null;
       }
     }
 
-    // Debounce validation
     _debounce?.cancel();
     if (typed.isEmpty) {
       if (mounted) setState(() {});
@@ -97,7 +93,6 @@ class _ReportStepLocationState extends State<ReportStepLocation> {
     });
 
     try {
-      // Forward geocode: address -> coordinates
       final locations = await locationFromAddress(address);
 
       if (locations.isEmpty) {
@@ -112,7 +107,6 @@ class _ReportStepLocationState extends State<ReportStepLocation> {
 
       final loc = locations.first;
 
-      // Optional: normalize address by reverse geocoding the resolved coords
       String? normalized;
       try {
         final placemarks = await placemarkFromCoordinates(loc.latitude, loc.longitude);
@@ -132,7 +126,6 @@ class _ReportStepLocationState extends State<ReportStepLocation> {
 
       if (!mounted) return;
 
-      // Only apply if user hasn't changed the text since the request started
       final currentTyped = _addressCtrl.text.trim();
       if (currentTyped != address) {
         setState(() => _validating = false);
@@ -193,7 +186,6 @@ class _ReportStepLocationState extends State<ReportStepLocation> {
         ),
       );
 
-      // Reverse geocode
       String? resolvedAddress;
       try {
         final placemarks = await placemarkFromCoordinates(pos.latitude, pos.longitude);
@@ -269,17 +261,16 @@ class _ReportStepLocationState extends State<ReportStepLocation> {
         const SizedBox(height: 6),
         const Text(
           'Use your current location or enter an address',
-          style: TextStyle(color: AppColors.muted),
+          style: TextStyle(color: AppColors.textSecondary),
         ),
         const SizedBox(height: 12),
 
-        // Map with location pin
         Container(
           height: 180,
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            border: Border.all(color: AppColors.border),
-            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: AppColors.borderLight),
+            borderRadius: BorderRadius.circular(20),
           ),
           child: LocationMapPreview(
             latitude: widget.draft.latitude,
@@ -294,11 +285,21 @@ class _ReportStepLocationState extends State<ReportStepLocation> {
           width: double.infinity,
           child: FilledButton(
             onPressed: _locating ? null : _useCurrentLocation,
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(double.infinity, 52),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(999),
+              ),
+              textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            ),
             child: _locating
                 ? const SizedBox(
                     height: 18,
                     width: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
                   )
                 : const Text('Use Current Location'),
           ),
@@ -312,7 +313,7 @@ class _ReportStepLocationState extends State<ReportStepLocation> {
             labelText: 'Address (optional if location used)',
             hintText: 'e.g., 123 King St N, Waterloo',
             filled: true,
-            fillColor: Colors.white,
+            fillColor: AppColors.bgCard,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
             errorText: _addressError,
             helperText: _validating
@@ -320,8 +321,6 @@ class _ReportStepLocationState extends State<ReportStepLocation> {
                 : (_addressValid && _addressCtrl.text.trim().isNotEmpty
                     ? 'Address found ✓'
                     : null),
-
-            // ✅ suffix icon (spinner / check / error)
             suffixIcon: _addressCtrl.text.trim().isEmpty
                 ? null
                 : (_validating
@@ -348,6 +347,12 @@ class _ReportStepLocationState extends State<ReportStepLocation> {
             Expanded(
               child: OutlinedButton(
                 onPressed: widget.onBack,
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 52),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
                 child: const Text('Back'),
               ),
             ),
@@ -355,6 +360,13 @@ class _ReportStepLocationState extends State<ReportStepLocation> {
             Expanded(
               child: FilledButton(
                 onPressed: _canContinue ? widget.onNext : null,
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 52),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                ),
                 child: const Text('Continue'),
               ),
             ),

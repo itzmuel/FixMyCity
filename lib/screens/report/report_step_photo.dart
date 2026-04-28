@@ -79,7 +79,6 @@ class _ReportStepPhotoState extends State<ReportStepPhoto> {
     final fileName = 'report_${DateTime.now().millisecondsSinceEpoch}$ext';
     final savedFile = File('${photosDir.path}/$fileName');
 
-    // Copy the picked image out of the temp cache so it still exists on submit.
     await File(xfile.path).copy(savedFile.path);
     return savedFile.path;
   }
@@ -108,22 +107,22 @@ class _ReportStepPhotoState extends State<ReportStepPhoto> {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
         const SizedBox(height: 6),
         const Text('Photos help city staff verify and resolve issues faster.',
-            style: TextStyle(color: AppColors.muted)),
+            style: TextStyle(color: AppColors.textSecondary)),
         const SizedBox(height: 12),
 
         Container(
           height: 200,
           decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(color: AppColors.border),
-            borderRadius: BorderRadius.circular(18),
+            color: AppColors.bgCard,
+            border: Border.all(color: AppColors.borderLight),
+            borderRadius: BorderRadius.circular(20),
           ),
           child: path == null
               ? const Center(
-                  child: Text('No photo selected', style: TextStyle(color: AppColors.muted)),
+                  child: Text('No photo selected', style: TextStyle(color: AppColors.textMuted)),
                 )
               : ClipRRect(
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(20),
                   child: Image.file(File(path), fit: BoxFit.cover),
                 ),
         ),
@@ -135,6 +134,12 @@ class _ReportStepPhotoState extends State<ReportStepPhoto> {
             Expanded(
               child: OutlinedButton(
                 onPressed: _picking ? null : () => _pick(ImageSource.camera),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 52),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
                 child: const Text('Take Photo'),
               ),
             ),
@@ -142,6 +147,12 @@ class _ReportStepPhotoState extends State<ReportStepPhoto> {
             Expanded(
               child: OutlinedButton(
                 onPressed: _picking ? null : () => _pick(ImageSource.gallery),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 52),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
                 child: const Text('Upload'),
               ),
             ),
@@ -152,7 +163,7 @@ class _ReportStepPhotoState extends State<ReportStepPhoto> {
 
         const Text(
           'Tip: Photos with faces, blur, or poor lighting are blocked before submission.',
-          style: TextStyle(color: AppColors.muted, fontSize: 12),
+          style: TextStyle(color: AppColors.textMuted, fontSize: 12),
         ),
 
         const SizedBox(height: 16),
@@ -162,6 +173,12 @@ class _ReportStepPhotoState extends State<ReportStepPhoto> {
             Expanded(
               child: OutlinedButton(
                 onPressed: widget.onBack,
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 52),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
                 child: const Text('Back'),
               ),
             ),
@@ -169,6 +186,13 @@ class _ReportStepPhotoState extends State<ReportStepPhoto> {
             Expanded(
               child: FilledButton(
                 onPressed: widget.draft.isStep4Valid ? widget.onNext : null,
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 52),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                ),
                 child: const Text('Review'),
               ),
             ),
