@@ -59,7 +59,7 @@ class Issue {
 
   // Convert Supabase enum → Flutter enum
   static IssueStatus _statusFromDb(String value) {
-    switch (value) {
+    switch (value.trim().toLowerCase()) {
       case 'submitted':
         return IssueStatus.submitted;
       case 'in_progress':
@@ -71,19 +71,45 @@ class Issue {
     }
   }
 
+  static IssueCategory _categoryFromDb(dynamic rawValue) {
+    final raw = (rawValue ?? '').toString().trim();
+    if (raw.isEmpty) return IssueCategory.other;
+
+    final normalized = raw.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '_');
+
+    for (final category in IssueCategory.values) {
+      if (category.name == normalized) return category;
+    }
+
+    if (normalized.contains('pothole')) return IssueCategory.pothole;
+    if (normalized.contains('street') && normalized.contains('light')) {
+      return IssueCategory.streetlight;
+    }
+    if (normalized.contains('graffiti')) return IssueCategory.graffiti;
+    if (normalized.contains('sidewalk')) return IssueCategory.sidewalk;
+    if (normalized.contains('dump')) return IssueCategory.dumping;
+
+    return IssueCategory.other;
+  }
+
+  static DateTime _createdAtFromDb(dynamic rawValue) {
+    if (rawValue is DateTime) return rawValue;
+    final parsed = DateTime.tryParse((rawValue ?? '').toString());
+    return parsed ?? DateTime.now();
+  }
+
   factory Issue.fromSupabaseRow(Map<String, dynamic> row) {
+    final rawStatus = (row['status'] ?? 'submitted').toString();
     return Issue(
-      id: row['id'] as String,
-      category: IssueCategory.values.firstWhere(
-        (c) => c.name == row['category'],
-      ),
-      description: row['description'] as String,
-      createdAt: DateTime.parse(row['created_at'] as String),
-      status: _statusFromDb(row['status'] as String),
+      id: (row['id'] ?? '').toString(),
+      category: _categoryFromDb(row['category']),
+      description: (row['description'] ?? '').toString(),
+      createdAt: _createdAtFromDb(row['created_at']),
+      status: _statusFromDb(rawStatus),
       address: row['address'] as String?,
       latitude: (row['latitude'] as num?)?.toDouble(),
       longitude: (row['longitude'] as num?)?.toDouble(),
-      photoPath: row['photo_url'] as String?,
+      photoPath: (row['photo_url'] ?? row['photo_path']) as String?,
     );
   }
 }

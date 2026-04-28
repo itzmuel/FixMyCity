@@ -129,14 +129,10 @@ class IssueService {
   }
 
   Future<List<Issue>> getMyReports() async {
-    final user = await _ensureSignedIn();
-    late final List<dynamic> rows;
+    await _ensureSignedIn();
+    late final dynamic result;
     try {
-      rows = await _client
-          .from('issues')
-          .select()
-          .eq('reporter_id', user.id)
-          .order('created_at', ascending: false);
+      result = await _client.rpc('get_my_reports');
     } on PostgrestException catch (e) {
       if (_isAuthPostgrestError(e)) {
         throw const IssueAuthRequiredException(
@@ -146,7 +142,7 @@ class IssueService {
       rethrow;
     }
 
-    return rows
+    return (result as List<dynamic>)
         .map((row) => Issue.fromSupabaseRow(row as Map<String, dynamic>))
         .toList();
   }
