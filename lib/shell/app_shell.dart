@@ -27,8 +27,9 @@ class AppShell extends StatelessWidget {
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: index,
+        backgroundColor: AppColors.bgCard,
         selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.muted,
+        unselectedItemColor: AppColors.textMuted,
         showSelectedLabels: true,
         showUnselectedLabels: true,
         selectedFontSize: 12,

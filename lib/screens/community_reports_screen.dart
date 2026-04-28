@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../app/theme.dart';
 import '../models/issue.dart';
 import '../services/issue_service.dart';
+import '../widgets/fmc_status_chip.dart';
 import 'report/report_details_screen.dart';
 
 class CommunityReportsScreen extends StatefulWidget {
@@ -139,34 +140,37 @@ class _CommunityReportsScreenState extends State<CommunityReportsScreen> {
             return ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(18),
-                    child: Column(
-                      children: [
-                        const Icon(
-                          Icons.error_outline,
-                          size: 36,
-                          color: AppColors.muted,
-                        ),
-                        const SizedBox(height: 10),
-                        const Text(
-                          'Could not load community reports',
-                          style: TextStyle(fontWeight: FontWeight.w800),
-                        ),
-                        const SizedBox(height: 6),
-                        const Text(
-                          'Pull down to refresh and try again.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: AppColors.muted),
-                        ),
-                        const SizedBox(height: 12),
-                        FilledButton(
-                          onPressed: _loadInitial,
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    ),
+                Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: AppColors.bgCard,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: AppShadows.cardSoft,
+                  ),
+                  child: Column(
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        size: 36,
+                        color: AppColors.textMuted,
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'Could not load community reports',
+                        style: TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Pull down to refresh and try again.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: AppColors.textSecondary),
+                      ),
+                      const SizedBox(height: 12),
+                      FilledButton(
+                        onPressed: _loadInitial,
+                        child: const Text('Retry'),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -177,19 +181,22 @@ class _CommunityReportsScreenState extends State<CommunityReportsScreen> {
             return ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(18),
-                    child: Column(
-                      children: const [
-                        Icon(Icons.inbox, size: 36, color: AppColors.muted),
-                        SizedBox(height: 10),
-                        Text(
-                          'No community reports yet',
-                          style: TextStyle(fontWeight: FontWeight.w800),
-                        ),
-                      ],
-                    ),
+                Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: AppColors.bgCard,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: AppShadows.cardSoft,
+                  ),
+                  child: Column(
+                    children: const [
+                      Icon(Icons.inbox, size: 36, color: AppColors.textMuted),
+                      SizedBox(height: 10),
+                      Text(
+                        'No community reports yet',
+                        style: TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -221,7 +228,7 @@ class _CommunityReportsScreenState extends State<CommunityReportsScreen> {
                       child: Center(
                         child: Text(
                           'You have reached the end.',
-                          style: TextStyle(color: AppColors.muted),
+                          style: TextStyle(color: AppColors.textMuted),
                         ),
                       ),
                     );
@@ -232,7 +239,12 @@ class _CommunityReportsScreenState extends State<CommunityReportsScreen> {
 
                 final issue = _issues[i];
 
-                return Card(
+                return Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.bgCard,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: AppShadows.cardSoft,
+                  ),
                   child: ListTile(
                     title: Text(
                       issue.category.label,
@@ -242,9 +254,9 @@ class _CommunityReportsScreenState extends State<CommunityReportsScreen> {
                       issue.description,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: AppColors.muted),
+                      style: const TextStyle(color: AppColors.textSecondary),
                     ),
-                    trailing: _StatusChip(status: issue.status),
+                    trailing: FmcStatusChip(status: issue.status),
                     onTap: () {
                       Navigator.push(
                         context,
@@ -259,49 +271,6 @@ class _CommunityReportsScreenState extends State<CommunityReportsScreen> {
             ),
           );
         },
-      ),
-    );
-  }
-}
-
-class _StatusChip extends StatelessWidget {
-  final IssueStatus status;
-  const _StatusChip({required this.status});
-
-  @override
-  Widget build(BuildContext context) {
-    String label;
-    Color bg;
-    Color fg;
-
-    switch (status) {
-      case IssueStatus.submitted:
-        label = 'Submitted';
-        bg = const Color(0xFFFFF3C7);
-        fg = const Color(0xFF8A5A00);
-        break;
-      case IssueStatus.inProgress:
-        label = 'In Progress';
-        bg = const Color(0xFFD9ECFF);
-        fg = const Color(0xFF0B4A8B);
-        break;
-      case IssueStatus.resolved:
-        label = 'Resolved';
-        bg = const Color(0xFFDFF7E8);
-        fg = const Color(0xFF0B6B2A);
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: bg.withValues(alpha: 0.6)),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(color: fg, fontWeight: FontWeight.w800, fontSize: 12),
       ),
     );
   }
