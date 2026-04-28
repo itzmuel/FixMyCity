@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../app/theme.dart';
 
 class SectionTitle extends StatelessWidget {
   final IconData icon;
@@ -21,7 +22,7 @@ class SectionTitle extends StatelessWidget {
           width: 28,
           height: 28,
           decoration: BoxDecoration(
-            color: iconColor.withValues(alpha: 0.10), // ~10% tint
+            color: AppColors.primaryLight,
             shape: BoxShape.circle,
           ),
           child: Icon(

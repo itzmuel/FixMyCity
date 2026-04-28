@@ -22,13 +22,13 @@ class HelpRow extends StatelessWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: AppColors.muted.withValues(alpha: 0.10), // ~10% tint
+              color: AppColors.primaryLight,
               shape: BoxShape.circle,
             ),
             child: Icon(
               icon,
               size: 18,
-              color: AppColors.muted,
+              color: AppColors.primary,
             ),
           ),
           const SizedBox(width: 12),

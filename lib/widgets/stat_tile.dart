@@ -11,40 +11,32 @@ class StatTile extends StatelessWidget {
     required this.value,
   });
 
-  Color _bgForTitle() {
-    switch (title.toLowerCase()) {
-      case 'submitted':
-        return const Color(0xFFFFF3C7);
-      case 'in progress':
-        return const Color(0xFFD9ECFF);
-      case 'resolved':
-        return const Color(0xFFDFF7E8);
-      default:
-        return Colors.white;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14),
+      padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
-        color: _bgForTitle(),
+        color: AppColors.bgCard,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.cardSoft,
       ),
       child: Column(
         children: [
           Text(
             value,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              color: AppColors.primary,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             title,
             style: const TextStyle(
-              color: AppColors.muted,
+              color: AppColors.textSecondary,
               fontWeight: FontWeight.w600,
+              fontSize: 13,
             ),
           ),
         ],
